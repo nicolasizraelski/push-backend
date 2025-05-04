@@ -1,9 +1,14 @@
 // index.ts
 import express from "express";
 import admin from "firebase-admin";
+import cors from "cors";
 
 const app = express();
 const port = process.env.PORT || 8080;
+
+// Add JSON body parser middleware
+app.use(express.json());
+app.use(cors());
 const serviceAccount = {
   type: "service_account",
   project_id: "modakchallenge",
