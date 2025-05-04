@@ -25,28 +25,63 @@ admin.initializeApp({
 });
 
 app.post("/notify-purchase", async (req, res) => {
-  const { fcmToken, productTitle } = req.body;
+  try {
+    console.log("Received request body:", req.body);
+    const { fcmToken, productTitle } = req.body;
 
-  if (!fcmToken || !productTitle) {
-    return res.status(400).json({ error: "Missing fields" });
-  }
-
-  setTimeout(async () => {
-    try {
-      await admin.messaging().send({
-        token: fcmToken,
-        notification: {
-          title: "Your order is on its way!",
-          body: `We're shipping your ${productTitle} now.`,
+    if (!fcmToken || !productTitle) {
+      console.error("Missing required fields:", { fcmToken, productTitle });
+      return res.status(400).json({
+        error: "Missing fields",
+        details: {
+          fcmToken: !fcmToken ? "Missing FCM token" : "Present",
+          productTitle: !productTitle ? "Missing product title" : "Present",
         },
       });
-      console.log("✅ Notification sent");
-    } catch (err) {
-      console.error("❌ Error sending notification:", err);
     }
-  }, 10000);
 
-  res.status(200).json({ message: "Notification scheduled" });
+    setTimeout(async () => {
+      try {
+        console.log("Attempting to send notification with:", { fcmToken, productTitle });
+        const message = {
+          token: fcmToken,
+          notification: {
+            title: "Your order is on its way!",
+            body: `We're shipping your ${productTitle} now.`,
+          },
+        };
+
+        const response = await admin.messaging().send(message);
+        console.log("✅ Notification sent successfully:", response);
+      } catch (err) {
+        console.error("❌ Error sending notification:", {
+          error: err.message,
+          code: err.code,
+          details: err.details,
+          stack: err.stack,
+        });
+      }
+    }, 10000);
+
+    res.status(200).json({
+      message: "Notification scheduled",
+      details: {
+        scheduledTime: new Date(Date.now() + 10000).toISOString(),
+        productTitle,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Unexpected error in notify-purchase endpoint:", {
+      error: err.message,
+      stack: err.stack,
+      requestBody: req.body,
+    });
+    res.status(500).json({
+      error: "Internal server error",
+      message: err.message,
+      details: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
+  }
 });
 
 app.get("/", (req, res) => {
