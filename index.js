@@ -76,9 +76,26 @@ app.post("/notify-purchase", async (req, res) => {
         fcmToken: fcmToken,
         productTitle: productTitle,
       });
-      res.status(500).json({
-        error: "Failed to send notification",
+
+      // Enhanced error handling
+      let errorMessage = "Failed to send notification";
+      let statusCode = 500;
+
+      if (
+        err.code === "messaging/invalid-registration-token" ||
+        err.code === "messaging/registration-token-not-registered"
+      ) {
+        errorMessage = "Invalid or unregistered FCM token";
+        statusCode = 400;
+      } else if (err.code === "messaging/third-party-auth-error") {
+        errorMessage = "Authentication error with push service";
+        statusCode = 500;
+      }
+
+      res.status(statusCode).json({
+        error: errorMessage,
         message: err.message,
+        code: err.code,
         details: process.env.NODE_ENV === "development" ? err.stack : undefined,
       });
     }
