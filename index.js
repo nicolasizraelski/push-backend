@@ -1,7 +1,7 @@
-// index.ts
 import express from "express";
 import admin from "firebase-admin";
 import cors from "cors";
+import { serviceAccount } from "./modakchallenge-firebase-adminsdk-fbsvc-0bc1bf7cb4.js";
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -10,7 +10,7 @@ console.log("🚀 Starting server initialization...");
 const initializeFirebase = () => {
   console.log("📱 Initializing Firebase Admin SDK...");
   try {
-    const serviceAccount = require("./modakchallenge-firebase-adminsdk-fbsvc-0bc1bf7cb4.json");
+    console.log("🔑 Service account:", serviceAccount);
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
