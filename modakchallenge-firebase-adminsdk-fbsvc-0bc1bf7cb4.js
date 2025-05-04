@@ -10,7 +10,7 @@ export const serviceAccount = {
   type: "service_account",
   project_id: projectId,
   private_key_id: privateKeyId,
-  private_key: privateKey,
+  private_key: privateKey.replace(/\\n/g, "\n"),
   client_email: clientEmail,
   client_id: clientId,
   auth_uri: "https://accounts.google.com/o/oauth2/auth",
