@@ -47,7 +47,9 @@ app.post("/notify-purchase", async (req, res) => {
 
     setTimeout(async () => {
       try {
-        console.log("Attempting to send notification with:", { fcmToken, productTitle });
+        console.log("Starting notification process...");
+        console.log("FCM Token being used:", fcmToken);
+
         const message = {
           token: fcmToken,
           notification: {
@@ -56,18 +58,23 @@ app.post("/notify-purchase", async (req, res) => {
           },
         };
 
+        console.log("Attempting to send message:", JSON.stringify(message, null, 2));
+
         const response = await admin.messaging().send(message);
-        console.log("✅ Notification sent successfully:", response);
+        console.log("✅ Notification sent successfully. Response:", response);
       } catch (err) {
-        console.error("❌ Error sending notification:", {
+        console.error("❌ Detailed error sending notification:", {
           error: err.message,
           code: err.code,
           details: err.details,
           stack: err.stack,
+          fcmToken: fcmToken,
+          productTitle: productTitle,
         });
       }
     }, 10000);
 
+    console.log("Notification scheduled");
     res.status(200).json({
       message: "Notification scheduled",
       details: {
