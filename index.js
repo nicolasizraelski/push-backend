@@ -45,43 +45,44 @@ app.post("/notify-purchase", async (req, res) => {
       });
     }
 
-    setTimeout(async () => {
-      try {
-        console.log("Starting notification process...");
-        console.log("FCM Token being used:", fcmToken);
+    console.log("Starting notification process...");
+    console.log("FCM Token being used:", fcmToken);
 
-        const message = {
-          token: fcmToken,
-          notification: {
-            title: "Your order is on its way!",
-            body: `We're shipping your ${productTitle} now.`,
-          },
-        };
-
-        console.log("Attempting to send message:", JSON.stringify(message, null, 2));
-
-        const response = await admin.messaging().send(message);
-        console.log("✅ Notification sent successfully. Response:", response);
-      } catch (err) {
-        console.error("❌ Detailed error sending notification:", {
-          error: err.message,
-          code: err.code,
-          details: err.details,
-          stack: err.stack,
-          fcmToken: fcmToken,
-          productTitle: productTitle,
-        });
-      }
-    }, 10000);
-
-    console.log("Notification scheduled");
-    res.status(200).json({
-      message: "Notification scheduled",
-      details: {
-        scheduledTime: new Date(Date.now() + 10000).toISOString(),
-        productTitle,
+    const message = {
+      token: fcmToken,
+      notification: {
+        title: "Your order is on its way!",
+        body: `We're shipping your ${productTitle} now.`,
       },
-    });
+    };
+
+    console.log("Attempting to send message:", JSON.stringify(message, null, 2));
+
+    try {
+      const response = await admin.messaging().send(message);
+      console.log("✅ Notification sent successfully. Response:", response);
+      res.status(200).json({
+        message: "Notification sent successfully",
+        details: {
+          productTitle,
+          response,
+        },
+      });
+    } catch (err) {
+      console.error("❌ Error sending notification:", {
+        error: err.message,
+        code: err.code,
+        details: err.details,
+        stack: err.stack,
+        fcmToken: fcmToken,
+        productTitle: productTitle,
+      });
+      res.status(500).json({
+        error: "Failed to send notification",
+        message: err.message,
+        details: process.env.NODE_ENV === "development" ? err.stack : undefined,
+      });
+    }
   } catch (err) {
     console.error("❌ Unexpected error in notify-purchase endpoint:", {
       error: err.message,
